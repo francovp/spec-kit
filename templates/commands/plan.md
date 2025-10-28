@@ -1,5 +1,5 @@
 ---
-description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+description: Execute the implementation planning workflow using the plan template to generate or update design artifacts.
 scripts:
   sh: scripts/bash/setup-plan.sh --json
   ps: scripts/powershell/setup-plan.ps1 -Json
@@ -18,6 +18,10 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
+### a. CREATION MODE
+
+If no existing implementation plan file is found at the IMPL_PLAN path, you are in creation mode. Execute the plan template to generate all required design artifacts from scratch.
+
 1. **Setup**: Run `{SCRIPT}` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **Load context**: Read FEATURE_SPEC and `/memory/constitution.md`. Load IMPL_PLAN template (already copied).
@@ -32,6 +36,28 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Re-evaluate Constitution Check post-design
 
 4. **Stop and report**: Command ends after Phase 2 planning. Report branch, IMPL_PLAN path, and generated artifacts.
+
+### b. UPDATE MODE (spec changes)
+
+Consider this rules if the feature specification already exists and IMPL_PLAN is present
+
+1. **IMPORTANT**: In update mode, DO NOT run `{SCRIPT}`, as this will overwrite existing files. Instead, assume the environment is already set up.
+
+2. **Load context**: Parse the spec diff (if accessible) or re-read entire FEATURE_SPEC.
+
+3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
+   - Update the Technical Context section to reflect new requirements, constraints, or unknowns from the updated spec (mark unknowns as "NEEDS CLARIFICATION")
+   - Update Constitution Check section from constitution
+   - Evaluate gates (ERROR if violations unjustified)
+   - Phase 0: Re-scan Technical Context for any remaining NEEDS CLARIFICATION introduced by changes.
+   - Phase 0: Update research.md (resolve all NEEDS CLARIFICATION)
+   - Phase 1: Update data-model.md, contracts/, quickstart.md
+   - Phase 1: Update agent context by running the agent script
+   - Re-evaluate Constitution Check post-design
+   - Re-check if Technical Context is updated for new requirements/unknowns
+   - Stop if unresolved merge conflicts or accidental template overwrite
+
+5. **Stop and report**: Command ends after Phase 2 planning. Report branch, IMPL_PLAN path, and generated artifacts.
 
 ## Phases
 
